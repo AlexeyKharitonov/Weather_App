@@ -5,10 +5,8 @@ import { useWeather } from "../hooks/useWeather";
 import { weatherFormRules } from "../constants";
 import Button from "./Button";
 import WeatherCard from "./WeatherCard";
-
-type TFormData = {
-  city?: string;
-};
+import { TFormData } from "../types";
+import { Spiner } from "./Spiner";
 
 const formStyle: React.CSSProperties = {
   maxWidth: 600,
@@ -45,10 +43,17 @@ const FormInput = () => {
 
   const cityContent = watch("city");
 
-  const { data: weather, error, isLoading, refetch } = useWeather(cityContent);
+  const {
+    mutate: fetchWeather,
+    data: weather,
+    error,
+    isLoading,
+  } = useWeather();
 
   const onSubmit: SubmitHandler<TFormData> = (data) => {
-    refetch(data.city);
+    if (data.city) {
+      fetchWeather(data.city);
+    }
     reset();
   };
 
@@ -57,6 +62,8 @@ const FormInput = () => {
   }: React.ChangeEvent<HTMLInputElement>) => {
     setValue("city", value);
   };
+
+  if (isLoading) return <Spiner />;
 
   return (
     <>
@@ -92,7 +99,11 @@ const FormInput = () => {
         )}
       </form>
       {weather && (
-        <WeatherCard city={weather.name} temperature={weather.main.temp} />
+        <WeatherCard
+          city={weather.name}
+          humidity={weather.main.humidity}
+          temperature={weather.main.temp}
+        />
       )}
       {error && <p>Error: {error.message}</p>}
     </>
